@@ -16,7 +16,7 @@ const loginUserSchema = Joi.object({
 });
 
 const getUserSchema = Joi.object({
-  userid: userid.required(),
+  username: username.required(),
 });
 
 module.exports = {

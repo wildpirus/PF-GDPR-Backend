@@ -22,7 +22,8 @@ const createPatientSchema = Joi.object({
   birthdate: birthdate,
   expeditionplaceid: expeditionplaceid,
   civilstate: civilstate,
-  email: email.required()
+  email: email.required(),
+  userid: userid.required()
 });
 
 const getPatientSchema = Joi.object({

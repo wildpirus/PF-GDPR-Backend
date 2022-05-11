@@ -17,8 +17,8 @@ router.get('/',
   validatorHandler(getUserSchema, 'query'),
   async (req,res, next) => {
     try {
-      const { userid } = req.query;
-      const user = await service.findOne(userid);
+      const { username } = req.query;
+      const user = await service.findOne(username);
       res.status(200).json(user);
     } catch (error) {
       next(error);

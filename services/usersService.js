@@ -12,27 +12,27 @@ class UsersService {
   //Register
   async create(data) {
     const foundUser = await this.pool.query(
-      "select * from users where username='"+data.username+"';"
+      "select usersid from users where username = '"+data.username+"';"
     );
     if (foundUser.rowCount>0) {
       throw boom.conflict('Username in use');
     }
     const salt = await bcrypt.genSalt(10);
     data.password = await bcrypt.hash(data.password, salt);
-    const newUser = data/*await this.pool.query(
-      "insert into users values('"+data.username+"','"+data.password+"',CURRENT_DATE)"
-    );*/
-    return {"message":"faker"};//newUser.rows
+    await this.pool.query(
+      "insert into users values('0','"+data.username+"','"+data.password+"',CURRENT_DATE)"
+    );
+    return this.findOne(data.username);
   }
 
   //Get user
-  async findOne(userid) {
-    const query = "select * from users where userid = '"+userid+"';";
+  async findOne(username) {
+    const query = "select usersid,username,created_at from users where username = '"+username+"';";
     const foundUser =  await this.pool.query(query);
     if (foundUser.rowCount===0) {
       throw boom.notFound('User not found');
     }
-    return {"message":"faker"};//foundUser.rows;
+    return foundUser.rows[0];
   }
 
   //Login
@@ -43,11 +43,11 @@ class UsersService {
     if (foundUser.rowCount===0) {
       throw boom.notFound('Username not found');
     }
-    const matchedPassword = await bcrypt.compare(data.password, foundUser.password);
+    const matchedPassword = await bcrypt.compare(data.password, foundUser.rows[0].password);
     if (!matchedPassword){
       throw boom.notFound('Incorrect password');
     }
-    return {"message":"faker"};//foundUser.rows;
+    return this.findOne(data.username);
   }
 }
 
