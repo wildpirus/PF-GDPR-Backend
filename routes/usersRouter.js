@@ -25,7 +25,7 @@ router.get('/',
     }
 });
 
-router.post('/singup',
+router.post('/signup',
   validatorHandler(createUserSchema, 'body'),
   async (req,res, next) => {
     try {
