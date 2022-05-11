@@ -17,15 +17,15 @@ router.get('/',
   validatorHandler(getUserSchema, 'query'),
   async (req,res, next) => {
     try {
-      const { id_ } = req.query;
-      const user = await service.findOne(id_);
+      const { userid } = req.query;
+      const user = await service.findOne(userid);
       res.status(200).json(user);
     } catch (error) {
       next(error);
     }
 });
 
-router.post('/register',
+router.post('/singup',
   validatorHandler(createUserSchema, 'body'),
   async (req,res, next) => {
     try {
@@ -40,21 +40,25 @@ router.post('/register',
 
 router.post('/login',
   validatorHandler(loginUserSchema, 'body'),
-  async (req,res) => {
-    const body = req.body;
-    const user = await service.login(body);
-    res.status(200).json(user);
+  async (req, res, next) => {
+    try {
+      const body = req.body;
+      const user = await service.login(body);
+      res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
   }
 );
 
-router.post('/prev-login',
+/*router.post('/prev-login',
   validatorHandler(getUserSchema, 'body'),
   async (req,res) => {
     const { user_id } = req.body;
     const user = await service.prevLogin(user_id);
     res.status(200).json(user);
   }
-);
+);*/
 
 module.exports = router;
 
