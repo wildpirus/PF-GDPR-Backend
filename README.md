@@ -13,4 +13,4 @@ http://localhost:3000/api/v1/
 ```
 
 ### Endpoints (Postman file)
-https://drive.google.com/drive/folders/1pnWUlSez3vl3Ui6inqMV5LxOd-Zrx75a?usp=sharing
+https://drive.google.com/file/d/1K7N0D8Bgfy_CTmlYF-WE2H3V4VSUWc2f/view?usp=sharing
