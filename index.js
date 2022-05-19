@@ -12,8 +12,6 @@ const app = express();
 
 app.use(express.json());
 
-//const mongooseConnect = require('./lib/mongo');
-//mongooseConnect();
 
 /*const whitelist = ['http://localhost:8080', 'https://myapp.co'];
 const options = {
@@ -28,9 +26,12 @@ const options = {
 app.use(cors(options));*/
 app.use(cors());
 
+require('./utils/auth');
 
 app.get('/', (req,res) => {
-  res.status(200).json({});
+  res.status(200).json({
+    message: 'hello world'
+  });
 });
 
 routerApi(app);

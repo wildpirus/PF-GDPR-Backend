@@ -1,30 +1,19 @@
 const express = require('express');
+const passport = require('passport');
 
 const UsersService = require('../services/usersService');
 const validatorHandler = require('../middlewares/validatorHandler');
 const {
   createUserSchema,
   loginUserSchema,
-  getUserSchema
+  recoverySchema,
+  passwordRecoverySchema
 } = require('../schemas/userSchema');
-
 
 const router = express.Router();
 const service = new UsersService();
 
-//Get user
-router.get('/',
-  validatorHandler(getUserSchema, 'query'),
-  async (req,res, next) => {
-    try {
-      const { username } = req.query;
-      const user = await service.findOne(username);
-      res.status(200).json(user);
-    } catch (error) {
-      next(error);
-    }
-});
-
+// Create user
 router.post('/signup',
   validatorHandler(createUserSchema, 'body'),
   async (req,res, next) => {
@@ -38,48 +27,60 @@ router.post('/signup',
   }
 );
 
+// Login
 router.post('/login',
   validatorHandler(loginUserSchema, 'body'),
+  passport.authenticate('local', {session: false}),
   async (req, res, next) => {
     try {
-      const body = req.body;
-      const user = await service.login(body);
-      res.status(200).json(user);
+      const user = req.user;
+      res.json(service.signToken(user));
     } catch (error) {
       next(error);
     }
   }
 );
 
-/*router.post('/prev-login',
-  validatorHandler(getUserSchema, 'body'),
-  async (req,res) => {
-    const { user_id } = req.body;
-    const user = await service.prevLogin(user_id);
-    res.status(200).json(user);
+// Recovery recoverySchema
+router.post('/recovery',
+validatorHandler(recoverySchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      const rta = await service.sendRecoveryMail(email);
+      res.json(rta);
+    } catch (error) {
+      next(error);
+    }
   }
-);*/
+);
 
-module.exports = router;
-
-
-/*
-const express = require('express');
-const faker = require('faker');
-
-const router = express.Router();
-
-router.get('/',(req, res) => {
-  const {limit, offset} = req.query;
-  if (limit && offset) {
-    res.json({
-      limit,
-      offset
-    });
-  }else {
-    res.send("No hay parametros")
+// Recover password passwordRecoverySchema
+router.post('/recover-password',
+  validatorHandler(passwordRecoverySchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const { token, newPassword } = req.body;
+      const rta = await service.recoverPassword(token, newPassword);
+      res.json(rta);
+    } catch (error) {
+      next(error);
+    }
   }
+);
+
+// Get my user
+router.get('/',
+  passport.authenticate('jwt', {session: false}),
+  async (req,res, next) => {
+    try {
+      const id = req.user.sub;
+      const user = await service.findById(id);
+      res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
 });
 
+
 module.exports = router;
-*/

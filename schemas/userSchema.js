@@ -1,8 +1,10 @@
 const Joi = require('joi');
 
-const userid = Joi.string();
+const usersid = Joi.string();
 const username = Joi.string();
-const password = Joi.string();
+const password = Joi.string().min(8);
+const jwt = Joi.string();
+const email = Joi.string().email();
 
 
 const createUserSchema = Joi.object({
@@ -15,12 +17,18 @@ const loginUserSchema = Joi.object({
   password: password.required()
 });
 
-const getUserSchema = Joi.object({
-  username: username.required(),
+const passwordRecoverySchema = Joi.object({
+  token: jwt.required(),
+  newPassword: password.required()
+});
+
+const recoverySchema = Joi.object({
+  email: email.required(),
 });
 
 module.exports = {
   createUserSchema,
   loginUserSchema,
-  getUserSchema
+  recoverySchema,
+  passwordRecoverySchema
 }
