@@ -16,7 +16,7 @@ class UsersService {
   //Register
   async create(data) {
     const foundUser = await this.pool.query(
-      "select usersid from users where username = '"+data.username+"';"
+      "select users_id from users where username = '"+data.username+"';"
     );
     if (foundUser.rowCount>0) {
       throw boom.conflict('Username in use');
@@ -37,7 +37,7 @@ class UsersService {
     if (foundUser.rowCount===0) {
       throw boom.notFound('Username not found');
     }
-    const matchedPassword = await bcrypt.compare(data.password, foundUser.rows[0].password);
+    const matchedPassword = await bcrypt.compare(data.password, foundUser.rows[0].password_);
     if (!matchedPassword){
       throw boom.unauthorized('Incorrect password');
     }
@@ -47,7 +47,7 @@ class UsersService {
   //Create JWT
   signToken(user){
     const payload = {
-      sub: user.usersid
+      sub: user.user_id
     }
     const token = jwt.sign(payload, config.jwtSecret);
     return {
@@ -62,12 +62,12 @@ class UsersService {
     if (!user) {
       throw boom.unauthorized();
     }
-    const payload = { sub: user.usersid };
+    const payload = { sub: user.user_id };
     const token = jwt.sign(payload, config.jwtSecret, {expiresIn: '15min'});
     const link = `http://myfrontend.com/recovery?token=${token}`;
     const query = "update users \n" +
                   "set recovery_token = '"+token+"' \n" +
-                  "where usersid = '"+user.usersid+"';";
+                  "where user_id = '"+user.user_id+"';";
     await this.pool.query(query);
     const mail = {
       from: config.smtpEmail,
@@ -105,7 +105,7 @@ class UsersService {
       const hash = await bcrypt.hash(newPassword, 10);
       const query = "update users \n" +
                     "set recovery_token = null, password = '"+hash+"' \n" +
-                    "where usersid = '"+user.usersid+"';";
+                    "where user_id = '"+user.user_id+"';";
       await this.pool.query(query);
       return { message: 'password changed' };
     } catch (error) {
@@ -125,21 +125,21 @@ class UsersService {
   }
 
   async findById(id){
-    const query = "select * from users where usersid = '"+id+"';";
+    const query = "select * from users where user_id = '"+id+"';";
     const foundUser =  await this.pool.query(query);
     if (foundUser.rowCount===0) {
       throw boom.notFound('User not found');
     }
-    delete foundUser.rows[0].password;
+    delete foundUser.rows[0].password_;
     return foundUser.rows[0];
   }
   async findUserByEmail(email){
-    const query = "select users.usersid, v_person.email \n" +
+    const query = "select users.user_id, v_person.email \n" +
                   "from users \n" +
                   "join person \n" +
-                  "	on person.usersid = users.usersid \n" +
+                  "	on person.user_id = users.user_id \n" +
                   "join v_person \n" +
-                  "	on v_person.patientid = person.personid	 \n" +
+                  "	on v_person.patient_id = person.person_id	 \n" +
                   "where v_person.email = '"+email+"' \n" +
                   "limit 1";
     const user =  await this.pool.query(query);
