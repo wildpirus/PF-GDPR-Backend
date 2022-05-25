@@ -8,6 +8,60 @@ class PersonsService {
     this.pool.on('error', (err) => console.error(err));
   }
 
+  //-------------------------------Public methods--------------------------------//
+  // get person by person id
+  async getPersonById(person_id){
+    const data = await this.pool.query("select * from v_persons where person_id = '"+person_id+"';");
+    const person = data.rows[0];
+    if (person) {
+      return person;
+    } else {
+      throw boom.notFound('There is no person with that person id.')
+    }
+  }
+
+  // get person by id number
+  async getPersonByIdNumber(id_number){
+    const data = await this.pool.query("select * from v_persons where id_number = '"+id_number+"' limit 1;");
+    const person = data.rows[0];
+    if (person) {
+      return person
+    } else {
+      throw boom.notFound("Person not found");
+    }
+  }
+
+  // verification on id is in the db
+  async isIdRegistered(id_number){
+    const query = (
+      "select v_persons.person_id, \n"+
+      "       patients.patient_id, \n"+
+      "       employees.employee_id \n"+
+      "from v_persons \n"+
+      "left join patients \n"+
+      "    on patients.person_id = v_persons.person_id \n"+
+      "left join employees \n"+
+      "    on employees.person_id = v_persons.person_id \n"+
+      "where v_persons.id_number = '"+id_number+"' \n"+
+      "limit 1;"
+      );
+    const data = await this.pool.query(query);
+    const result = data.rows[0];
+    if (result){
+      return {
+        person_id: result.person_id,
+        patient_id: result.patient_id? result.patient_id:false,
+        employee_id: result.employee_id? result.employee_id:false
+      };
+    }else {
+      return {
+        person_id: false,
+        patient_id: false,
+        employee_id: false
+      };
+    }
+  }
+  //------------------------------Protected methods------------------------------//
   async create(data,user_id) {
     const foundPatient = await this.findPersonByUserId(user_id);
     if (foundPatient){
@@ -31,12 +85,12 @@ class PersonsService {
     }
   }
 
+  //-------------------------------Private methods-------------------------------//
   async findPersonByUserId(user_id) {
     const person = await this.pool.query("select * from v_persons where user_id = '"+user_id+"';");
     return person.rows[0];
   }
-
-  async findPersonById(person_id){
+  /*
     const personUser = await this.pool.query(
       "select persons.user_id, users.consent \n"+
       "from persons \n"+
@@ -54,7 +108,7 @@ class PersonsService {
     }else {
       throw boom.notFound("Person not found.")
     }
-  }
+    */
 
 }
 

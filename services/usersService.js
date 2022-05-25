@@ -24,7 +24,7 @@ class UsersService {
     await this.pool.query(
       "insert into users values('0','"+data.username+"','"+hashedPassword+"','"+data.consent+"',CURRENT_DATE,null)"
     );
-    /*const mail = {
+    const mail = {
       from: config.smtpEmail,
       to: `${email}`,
       subject: "Bienvenido a GDPR-APP",
@@ -32,7 +32,7 @@ class UsersService {
             `<b>Usuario: ${data.username}</b><br>`+
             `<b>Contraseña: ${data.password}</b><br>`
     }
-    await this.sendMail(mail);*/
+    await this.sendMail(mail);
     return this.findByUsername(data.username);
   }
 

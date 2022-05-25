@@ -11,14 +11,15 @@ const {
   createPersonSchema
 } = require('../schemas/personSchema');
 const {
-  createPatientSchema
+  createPatientSchema,
+  createPatientWithPersonSchema
 } = require('../schemas/patientSchema');
 
 
 const router = express.Router();
 const service = new PatientsService();
 
-router.post('/register',
+router.post('/register-all-new',
   passport.authenticate('jwt', {session: false}),
   checkRoles('MED'),
   validatorHandler(createUserSchema, 'body.user'),
@@ -28,6 +29,21 @@ router.post('/register',
     try {
       const body = req.body;
       const newPatient = await service.createAllNewPatient(body);
+      res.status(201).json(newPatient);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.post('/register-new',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('MED'),
+  validatorHandler(createPatientWithPersonSchema, 'body'),
+  async (req,res, next) => {
+    try {
+      const body = req.body;
+      const newPatient = await service.create(body,body.person_id);
       res.status(201).json(newPatient);
     } catch (error) {
       next(error);

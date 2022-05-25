@@ -17,28 +17,35 @@ class PatientsService {
     this.pool.on('error', (err) => console.error(err));
   }
 
-  //Register
+  //-------------------------------Public methods--------------------------------//
+  //Register all new patient
   async createAllNewPatient(data) {
-    const user = await usersService.create(data.user, data.person.email);
-    console.log(user);
-    const person = await personsService.create(data.person, user.user_id);
-    console.log(person);
-    const foundPatient = await this.findPatientByPersonId(person.person_id);
+    const {person, patient} = await personsService.isIdRegistered(data.person.id_number);
+    if (person || patient){
+      throw boom.conflict("There's someone already registered.");
+    } else {
+      const newUser = await usersService.create(data.user, data.person.email);
+      const newPerson = await personsService.create(data.person, newUser.user_id);
+      return await this.create(data.patient,newPerson.person_id);
+    }
+  }
+  //Register new patient
+  async create(newPatient,person_id){
+    const foundPatient = await this.findPatientByPersonId(person_id);
     if (foundPatient) {
       throw boom.conflict('A patient already exist for this person.');
     }
     await this.pool.query(
       "insert into patients values('0','"+
-        data.patient.height+"','"+
-        data.patient.weight+"','"+
-        data.patient.rh+"','"+
-        person.person_id+"',null);"
+        newPatient.height+"','"+
+        newPatient.weight+"','"+
+        newPatient.rh+"','"+
+        person_id+"');"
     );
-    console.log(await this.viewPatientData(person.person_id));
-    return {message: "Patient created"};//this.viewPatientData(data.person_id);
+    return { created: true };//this.viewPatientData(data.person_id);
   }
 
-  //Get patient
+  //-------------------------------Private methods-------------------------------//
   async findPatientByPersonId(person_id) {
     const foundPatient = await this.pool.query(
       "select * from patients where person_id = '"+person_id+"';"
@@ -50,6 +57,7 @@ class PatientsService {
     const result = await this.pool.query(query);
     return result.rows[0];
   }
+  /*
   async viewPatientDataForEmployee(person_id){
     const foundPatient = this.findPatientByPersonId(person_id);
     if (!foundPatient) {
@@ -67,7 +75,7 @@ class PatientsService {
       }
     }
   }
-
+  */
 }
 
 module.exports = PatientsService;

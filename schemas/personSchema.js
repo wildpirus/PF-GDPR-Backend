@@ -26,6 +26,11 @@ const createPersonSchema = Joi.object({
   phone_number: phone_number.required()
 });
 
+const getByIdNumberSchema = Joi.object({
+  id_number: id_number.required()
+});
+
 module.exports = {
-  createPersonSchema
+  createPersonSchema,
+  getByIdNumberSchema
 }

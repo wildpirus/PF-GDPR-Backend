@@ -5,7 +5,7 @@ const PersonsService = require('../services/personsService');
 const validatorHandler = require('../middlewares/validatorHandler');
 const { checkRoles } = require('../middlewares/authHandler');
 const {
-  createPersonSchema
+  getByIdNumberSchema
 } = require('../schemas/personSchema');
 
 const router = express.Router();
@@ -16,8 +16,8 @@ router.get('/',
   passport.authenticate('jwt', {session: false}),
   async (req,res, next) => {
     try {
-      const { user_id } = req.user;
-      const person = await service.findPersonByUserId(user_id);
+      const { person_id } = req.user;
+      const person = await service.getPersonById(person_id);
       res.status(201).json(person);
     } catch (error) {
       next(error);
@@ -25,14 +25,15 @@ router.get('/',
   }
 );
 
-// get person data
-router.get('/:person_id',
+// get person data by id number
+router.get('/get-person',
   passport.authenticate('jwt', {session: false}),
   checkRoles('MED'),
+  validatorHandler(getByIdNumberSchema, 'body'),
   async (req,res, next) => {
     try {
-      const { person_id } = req.params;
-      const person = await service.findPersonById(person_id);
+      const { id_number } = req.body;
+      const person = await service.getPersonByIdNumber(id_number);
       res.status(201).json(person);
     } catch (error) {
       next(error);
@@ -40,5 +41,20 @@ router.get('/:person_id',
   }
 );
 
+// verify if an id is in the db
+router.get('/verify-id-number',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('MED'),
+  validatorHandler(getByIdNumberSchema, 'body'),
+  async (req,res, next) => {
+    try {
+      const { id_number } = req.body;
+      const person = await service.isIdRegistered(id_number);
+      res.status(201).json(person);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = router;
