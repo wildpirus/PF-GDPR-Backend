@@ -5,16 +5,20 @@ const username = Joi.string();
 const password = Joi.string().min(8);
 const jwt = Joi.string();
 const email = Joi.string().email();
+const consent = Joi.boolean();
+const role = Joi.string();
 
 
 const createUserSchema = Joi.object({
   username: username.required(),
-  password: password.required()
+  password: password.required(),
+  consent: consent.required()
 });
 
 const loginUserSchema = Joi.object({
   username: username.required(),
-  password: password.required()
+  password: password.required(),
+  role: role.required()
 });
 
 const passwordRecoverySchema = Joi.object({

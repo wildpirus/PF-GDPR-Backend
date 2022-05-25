@@ -3,8 +3,8 @@ const passport = require('passport');
 
 const UsersService = require('../services/usersService');
 const validatorHandler = require('../middlewares/validatorHandler');
+const { checkRoles } = require('../middlewares/authHandler');
 const {
-  createUserSchema,
   loginUserSchema,
   recoverySchema,
   passwordRecoverySchema
@@ -13,20 +13,6 @@ const {
 const router = express.Router();
 const service = new UsersService();
 
-// Create user
-router.post('/signup',
-  validatorHandler(createUserSchema, 'body'),
-  async (req,res, next) => {
-    try {
-      const body = req.body;
-      const newUser = await service.create(body);
-      res.status(201).json(newUser);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
 // Login
 router.post('/login',
   validatorHandler(loginUserSchema, 'body'),
@@ -34,7 +20,8 @@ router.post('/login',
   async (req, res, next) => {
     try {
       const user = req.user;
-      res.json(service.signToken(user));
+      const { role } = req.body;
+      res.json(await service.signToken(user, role));
     } catch (error) {
       next(error);
     }
@@ -74,8 +61,9 @@ router.get('/',
   passport.authenticate('jwt', {session: false}),
   async (req,res, next) => {
     try {
-      const id = req.user.sub;
-      const user = await service.findById(id);
+      const {user_id, role_name } = req.user;
+      const role = role_name === 'patient' ? role_name : 'employee'
+      const user = await service.getUserInfo(user_id, role);
       res.status(200).json(user);
     } catch (error) {
       next(error);
