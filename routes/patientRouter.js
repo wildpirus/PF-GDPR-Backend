@@ -27,7 +27,7 @@ router.post('/register',
   async (req,res, next) => {
     try {
       const body = req.body;
-      const newPatient = await service.create(body);
+      const newPatient = await service.createAllNewPatient(body);
       res.status(201).json(newPatient);
     } catch (error) {
       next(error);

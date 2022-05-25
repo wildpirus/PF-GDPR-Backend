@@ -25,7 +25,7 @@ router.get('/',
   }
 );
 
-// get patient data
+// get person data
 router.get('/:person_id',
   passport.authenticate('jwt', {session: false}),
   checkRoles('MED'),

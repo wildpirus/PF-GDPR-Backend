@@ -18,7 +18,7 @@ class PatientsService {
   }
 
   //Register
-  async create(data) {
+  async createAllNewPatient(data) {
     const user = await usersService.create(data.user, data.person.email);
     console.log(user);
     const person = await personsService.create(data.person, user.user_id);
