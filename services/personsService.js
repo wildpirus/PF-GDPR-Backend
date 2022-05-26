@@ -111,25 +111,6 @@ class PersonsService {
     const person = await this.pool.query("select * from v_persons where user_id = '"+user_id+"';");
     return person.rows[0];
   }
-  /*
-    const personUser = await this.pool.query(
-      "select persons.user_id, users.consent \n"+
-      "from persons \n"+
-      "join users \n"+
-      "    on users.user_id = persons.user_id \n"+
-      "where persons.person_id = '"+person_id+"' \n"+
-      "limit 1;");
-    const userInfo = personUser.rows[0]
-    if (userInfo){
-      if (userInfo.consent){
-        return await this.findPersonByUserId(userInfo.user_id);
-      } else {
-        throw boom.unauthorized("User has not given consent.")
-      }
-    }else {
-      throw boom.notFound("Person not found.")
-    }
-    */
 
 }
 

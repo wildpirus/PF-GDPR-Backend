@@ -95,25 +95,7 @@ class PatientsService {
     const result = await this.pool.query(query);
     return result.rows[0];
   }
-  /*
-  async viewPatientDataForEmployee(person_id){
-    const foundPatient = this.findPatientByPersonId(person_id);
-    if (!foundPatient) {
-      throw boom.notFound('Patient not found');
-    } else {
-      try {
-        const payload = jwt.verify(foundPatient.consent_token, config.jwtSecret);
-        const patient = await this.viewPatientData(payload.person_id);
-        if (patient.rowCount===0) {
-          throw boom.unauthorized();
-        }
-        return patient.rows[0];
-      } catch (error) {
-        throw boom.unauthorized();
-      }
-    }
-  }
-  */
+  
 }
 
 module.exports = PatientsService;
