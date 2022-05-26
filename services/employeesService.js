@@ -68,6 +68,31 @@ class EmployeesService {
     }
   }
 
+  // Get appointments info
+  async getAppointmentInfo(employee_id){
+    const query = (
+      "select care.careid, \n"+
+      "       care.patient_id, \n"+
+      "       v_persons.first_name, \n"+
+      "       v_persons.last_name, \n"+
+      "       date_part('year', age(v_persons.birth_date::date))::int, \n"+
+      "       care.reason, \n"+
+      "       care.care_date \n"+
+      "from care \n"+
+      "join patients \n"+
+      "    on patients.patient_id = care.patient_id \n"+
+      "join v_persons \n"+
+      "    on v_persons.person_id = patients.person_id \n"+
+      "where care.employee_id = '"+employee_id+"';"
+    );
+    const result = await this.pool.query(query);
+    const data = result.rows;
+    if (data){
+      return data;
+    } else {
+      throw boom.notFound("You have no appointments");
+    }
+  }
   //-------------------------------Private methods-------------------------------//
   async findEmployeeByPersonId(person_id) {
     const foundEmployee = await this.pool.query(

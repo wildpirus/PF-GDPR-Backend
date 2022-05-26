@@ -65,4 +65,18 @@ router.get('/my-basic-data',
   }
 );
 
+router.get('/my-appointments',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('MED'),
+  async (req,res, next) => {
+    try {
+      const { employee_id } = req.user;
+      const employee = await service.getAppointmentInfo(employee_id);
+      res.status(201).json(employee);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 module.exports = router;
