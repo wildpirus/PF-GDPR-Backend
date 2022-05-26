@@ -105,6 +105,15 @@ class EmployeesService {
     await this.pool.query(query);
     return {message: "successful update"};
   }
+
+  // get Anonimized data
+  async getAnonimizedData(){
+    const query = (
+      "select * from gdpr_view_all_patient_data_anonymized()"
+    );
+    const data = await this.pool.query(query);
+    return data.rows;
+  }
   //-------------------------------Private methods-------------------------------//
   async findEmployeeByPersonId(person_id) {
     const foundEmployee = await this.pool.query(

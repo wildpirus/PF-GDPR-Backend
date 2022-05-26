@@ -100,4 +100,18 @@ router.patch('/update-info',
   }
 );
 
+// Get anonimized data
+router.get('/anonimized-data',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('HUM'),
+  async (req,res, next) => {
+    try {
+      const data = await service.getAnonimizedData();
+      res.status(201).json(data);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 module.exports = router;
