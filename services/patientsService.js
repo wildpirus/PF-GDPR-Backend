@@ -41,9 +41,9 @@ class PatientsService {
         newPatient.height+"','"+
         newPatient.weight+"','"+
         newPatient.rh+"','"+
+        person_id+"','"+
         newPatient.full_consent+"','"+
-        newPatient.part_consent+"','"+
-        person_id+"');"
+        newPatient.part_consent+"');"
     );
     return { created: true };//this.viewPatientData(data.person_id);
   }
