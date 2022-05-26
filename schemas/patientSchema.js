@@ -1,5 +1,6 @@
 const Joi = require('joi');
 
+const patient_id = Joi.string();
 const height = Joi.string();
 const weight = Joi.string();
 const rh = Joi.string();
@@ -29,8 +30,13 @@ const updateConsentsSchema = Joi.object({
   part_consent: consent.required()
 });
 
+const getPatientSchema = Joi.object({
+  patient_id: patient_id.required()
+});
+
 module.exports = {
   createPatientSchema,
   createPatientWithPersonSchema,
-  updateConsentsSchema
+  updateConsentsSchema,
+  getPatientSchema
 }

@@ -74,7 +74,7 @@ class PatientsService {
   //get patient all data
   async getAllPatientData(user_id){
     const query = (
-      "select * from gdpr_view_all_patient_data_desencrypted('"+user_id+"');"
+      "select * from gdpr_view_all_patient_data_decrypted('"+user_id+"');"
     );
     const result = await this.pool.query(query);
     const data = result.rows[0];
@@ -96,10 +96,32 @@ class PatientsService {
     await this.pool.query(query);
     return {message: "consent changed"}
   }
+
+  // Get info for employee
+  async getPatientHistory(patient_id){
+    const query = (
+      "select users.user_id \n"+
+      "from patients \n"+
+      "join persons \n"+
+      "    on persons.person_id = patients.person_id \n"+
+      "join users \n"+
+      "    on users.user_id = persons.user_id \n"+
+      "where patients.patient_id = '"+patient_id+"' \n"+
+      "limit 1;"
+    );
+    const data = await this.pool.query(query);
+    const { user_id } = data.rows[0];
+    if (user_id) {
+      return await this.getAllPatientData(user_id)
+    }else {
+      throw boom.notFound();
+    }
+  }
+
   //-------------------------------Private methods-------------------------------//
   async findPatientByPersonId(person_id) {
     const foundPatient = await this.pool.query(
-      "select * from patients where person_id = '"+person_id+"';"
+      "select * from patients where person_id = '"+person_id+"' limit 1;"
     );
     return foundPatient.rows[0];
   }

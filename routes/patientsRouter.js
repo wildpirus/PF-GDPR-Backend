@@ -13,7 +13,8 @@ const {
 const {
   createPatientSchema,
   createPatientWithPersonSchema,
-  updateConsentsSchema
+  updateConsentsSchema,
+  getPatientSchema
 } = require('../schemas/patientSchema');
 
 
@@ -89,6 +90,21 @@ router.patch('/update-consents',
       const { patient_id } = req.user;
       const { full_consent, part_consent} = req.body;
       const patient = await service.updateConsents(patient_id,full_consent, part_consent);
+      res.status(201).json(patient);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.get('/patient-history',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('MED'),
+  validatorHandler(getPatientSchema, 'body'),
+  async (req,res, next) => {
+    try {
+      const { patient_id } = req.body;
+      const patient = await service.getPatientHistory(patient_id);
       res.status(201).json(patient);
     } catch (error) {
       next(error);
