@@ -51,5 +51,32 @@ router.post('/register-new',
   }
 );
 
+router.get('/my-basic-data',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('patient'),
+  async (req,res, next) => {
+    try {
+      const { patient_id } = req.user;
+      const patient = await service.getPatientData(patient_id);
+      res.status(201).json(patient);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.get('/all-my-data',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('patient'),
+  async (req,res, next) => {
+    try {
+      const { user_id } = req.user;
+      const patient = await service.getAllPatientData(user_id);
+      res.status(201).json(patient);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = router;

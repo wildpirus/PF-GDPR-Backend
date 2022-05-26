@@ -46,6 +46,43 @@ class PatientsService {
     return { created: true };//this.viewPatientData(data.person_id);
   }
 
+  //get patient data
+  async getPatientData(patient_id){
+    const query = (
+      "select v_persons.*, v_patients.* \n"+
+      "from v_patients \n"+
+      "join v_persons \n"+
+      "    on v_persons.person_id = v_patients.person_id \n"+
+      "where v_patients.patient_id = '"+patient_id+"' \n"+
+      "limit 1;"
+    );
+    const result = await this.pool.query(query);
+    const data = result.rows[0];
+    if (data){
+      delete data.person_id;
+      delete data.user_id;
+      delete data.attendant_id;
+      delete data.patient_id;
+      return data;
+    } else {
+      throw boom.notFound("Patient not found");
+    }
+  }
+
+  //get patient all data
+  async getAllPatientData(user_id){
+    const query = (
+      "select * from gdpr_view_all_patient_data_desencrypted('"+user_id+"');"
+    );
+    const result = await this.pool.query(query);
+    const data = result.rows[0];
+    if (data){
+      return data
+    } else {
+      throw boom.notFound("Patient not found");
+    }
+  }
+
   //-------------------------------Private methods-------------------------------//
   async findPatientByPersonId(person_id) {
     const foundPatient = await this.pool.query(
