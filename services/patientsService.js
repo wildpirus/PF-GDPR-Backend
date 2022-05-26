@@ -77,7 +77,7 @@ class PatientsService {
       "select * from gdpr_view_all_patient_data_decrypted('"+user_id+"');"
     );
     const result = await this.pool.query(query);
-    const data = result.rows[0];
+    const data = result.rows;
     if (data){
       return data
     } else {

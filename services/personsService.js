@@ -67,6 +67,28 @@ class PersonsService {
       };
     }
   }
+
+  // update person info
+  async update(data, person_id){
+    const query = (
+      "update persons \n"+
+      "set \n"+
+      "    first_name = '"+data.first_name+"', \n"+
+      "    last_name = '"+data.last_name+"', \n"+
+      "    gender = '"+data.gender+"', \n"+
+      "    id_type = '"+data.id_type+"', \n"+
+      "    id_number = '"+data.id_number+"', \n"+
+      "    id_expedition_place = '"+data.id_expedition_place+"', \n"+
+      "    civil_status = '"+data.civil_status+"', \n"+
+      "    email = '"+data.email+"', \n"+
+      "    phone_number = '"+data.phone_number+"', \n"+
+      "    birth_date = '"+data.birth_date+"', \n"+
+      "    id_expedition_date = '"+data.id_expedition_date+"' \n"+
+      "where person_id = '"+person_id+"';"
+    );
+    await this.pool.query(query);
+    return {message: "successful update"};
+  }
   //------------------------------Protected methods------------------------------//
   async create(data,user_id) {
     const foundPatient = await this.findPersonByUserId(user_id);

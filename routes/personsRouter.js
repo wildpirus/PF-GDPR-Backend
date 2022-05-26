@@ -5,6 +5,7 @@ const PersonsService = require('../services/personsService');
 const validatorHandler = require('../middlewares/validatorHandler');
 const { checkRoles } = require('../middlewares/authHandler');
 const {
+  createPersonSchema,
   getByIdNumberSchema
 } = require('../schemas/personSchema');
 
@@ -50,6 +51,21 @@ router.get('/verify-id-number',
     try {
       const { id_number } = req.body;
       const person = await service.isIdRegistered(id_number);
+      res.status(201).json(person);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.put('/update-info',
+  passport.authenticate('jwt', {session: false}),
+  validatorHandler(createPersonSchema, 'body'),
+  async (req,res, next) => {
+    try {
+      const { person_id } = req.user;
+      const body = req.body;
+      const person = await service.update(body, person_id);
       res.status(201).json(person);
     } catch (error) {
       next(error);
