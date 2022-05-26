@@ -20,8 +20,8 @@ class PatientsService {
   //-------------------------------Public methods--------------------------------//
   //Register all new patient
   async createAllNewPatient(data) {
-    const {person, patient} = await personsService.isIdRegistered(data.person.id_number);
-    if (person || patient){
+    const {person_id, patient_id} = await personsService.isIdRegistered(data.person.id_number);
+    if (person_id || patient_id){
       throw boom.conflict("There's someone already registered.");
     } else {
       const newUser = await usersService.create(data.user, data.person.email);

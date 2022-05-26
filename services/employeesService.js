@@ -20,8 +20,8 @@ class EmployeesService {
   //-------------------------------Public methods--------------------------------//
   //Register all new employee
   async createAllNewEmployee(data) {
-    const {person, employee} = await personsService.isIdRegistered(data.person.id_number);
-    if (person || employee){
+    const {person_id, employee_id} = await personsService.isIdRegistered(data.person.id_number);
+    if (person_id || employee_id){
       throw boom.conflict("There's someone already registered.");
     } else {
       const newUser = await usersService.create(data.user, data.person.email);
