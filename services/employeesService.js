@@ -93,6 +93,18 @@ class EmployeesService {
       throw boom.notFound("You have no appointments");
     }
   }
+
+  // Update patient info
+  async update(data){
+    const query = (
+      "update employees \n"+
+      "set \n"+
+      "    role_name = '"+data.role_name+"' \n"+
+      "where employee_id = '"+data.employee_id+"';"
+    );
+    await this.pool.query(query);
+    return {message: "successful update"};
+  }
   //-------------------------------Private methods-------------------------------//
   async findEmployeeByPersonId(person_id) {
     const foundEmployee = await this.pool.query(

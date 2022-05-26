@@ -12,16 +12,18 @@ const {
 } = require('../schemas/personSchema');
 const {
   createEmployeeSchema,
-  createEmployeeWithPersonSchema
+  createEmployeeWithPersonSchema,
+  updateEmployeeWithPersonSchema
 } = require('../schemas/employeeSchema');
 
 
 const router = express.Router();
 const service = new EmployeesService();
 
+// Register all new patient
 router.post('/register-all-new',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('HUM'),
   validatorHandler(createUserSchema, 'body.user'),
   validatorHandler(createPersonSchema, 'body.person'),
   validatorHandler(createEmployeeSchema, 'body.employee'),
@@ -36,9 +38,10 @@ router.post('/register-all-new',
   }
 );
 
+// Register new employee
 router.post('/register-new',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('HUM'),
   validatorHandler(createEmployeeWithPersonSchema, 'body'),
   async (req,res, next) => {
     try {
@@ -51,9 +54,10 @@ router.post('/register-new',
   }
 );
 
+// Get my basic data
 router.get('/my-basic-data',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('MED','HUM'),
   async (req,res, next) => {
     try {
       const { employee_id } = req.user;
@@ -65,6 +69,7 @@ router.get('/my-basic-data',
   }
 );
 
+// get my appointments
 router.get('/my-appointments',
   passport.authenticate('jwt', {session: false}),
   checkRoles('MED'),
@@ -72,6 +77,22 @@ router.get('/my-appointments',
     try {
       const { employee_id } = req.user;
       const employee = await service.getAppointmentInfo(employee_id);
+      res.status(201).json(employee);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// update employee basic info
+router.patch('/update-info',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('HUM'),
+  validatorHandler(updateEmployeeWithPersonSchema, 'body'),
+  async (req,res, next) => {
+    try {
+      const body = req.body;
+      const employee = await service.update(body);
       res.status(201).json(employee);
     } catch (error) {
       next(error);
