@@ -44,7 +44,7 @@ validatorHandler(recoverySchema, 'body'),
 );
 
 // Recover password passwordRecoverySchema
-router.post('/recover-password',
+router.patch('/recover-password',
   validatorHandler(passwordRecoverySchema, 'body'),
   async (req, res, next) => {
     try {
@@ -72,7 +72,7 @@ router.get('/',
 });
 
 // Change password
-router.post('/change-password',
+router.patch('/change-password',
   validatorHandler(changePasswordSchema, 'body'),
   passport.authenticate('jwt', {session: false}),
   async (req, res, next) => {
