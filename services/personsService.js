@@ -1,5 +1,11 @@
 const boom = require('@hapi/boom');
+const { query } = require('express');
 const pool = require('../libs/postgresPool');
+
+const { config } = require('../config/config');
+const UsersService = require('../services/usersService');
+
+const usersService = new UsersService();
 
 class PersonsService {
 
@@ -82,6 +88,21 @@ class PersonsService {
         data.id_expedition_date+"');";
       await this.pool.query(query);
       return this.findPersonByUserId(user_id);
+    }
+  }
+
+  async sendWarningEmail(person_id){
+    const query = "select email from v_persons where person_id = '"+person_id+"';";
+    const data = await this.pool.query(query);
+    const email = data.rows[0].email;
+    if (email){
+      const mail = {
+        from: config.smtpEmail,
+        to: `${email}`,
+        subject: "Aviso de brecha de datos",
+        html: `<b>Alguien ha intentado crear una cuenta con su numero de identificación. Contáctese con nosotros para más información.</b>`,
+      }
+      await usersService.sendMail(mail);
     }
   }
 
