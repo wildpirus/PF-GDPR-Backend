@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json());
 
 
-/*const whitelist = ['http://localhost:8080', 'https://myapp.co'];
+const whitelist = ['http://localhost:8080', config.feUrl];
 const options = {
   origin: (origin, callback) => {
     if (whitelist.includes(origin)) {
@@ -23,8 +23,7 @@ const options = {
     }
   }
 }
-app.use(cors(options));*/
-app.use(cors());
+app.use(cors(options));
 
 require('./utils/auth');
 
