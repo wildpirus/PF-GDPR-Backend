@@ -7,7 +7,8 @@ const { checkRoles } = require('../middlewares/authHandler');
 const {
   loginUserSchema,
   recoverySchema,
-  passwordRecoverySchema
+  passwordRecoverySchema,
+  changePasswordSchema
 } = require('../schemas/userSchema');
 
 const router = express.Router();
@@ -70,5 +71,19 @@ router.get('/',
     }
 });
 
+// Change password
+router.post('/change-password',
+  validatorHandler(changePasswordSchema, 'body'),
+  passport.authenticate('jwt', {session: false}),
+  async (req, res, next) => {
+    try {
+      const { user_id } = req.user;
+      const { currentPassword, newPassword } = req.body;
+      res.json(await service.changePassword(user_id, currentPassword, newPassword));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = router;

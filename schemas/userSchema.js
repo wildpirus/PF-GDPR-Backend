@@ -30,9 +30,15 @@ const recoverySchema = Joi.object({
   email: email.required(),
 });
 
+const changePasswordSchema = Joi.object({
+  currentPassword: password.required(),
+  newPassword: password.required()
+});
+
 module.exports = {
   createUserSchema,
   loginUserSchema,
   recoverySchema,
-  passwordRecoverySchema
+  passwordRecoverySchema,
+  changePasswordSchema
 }

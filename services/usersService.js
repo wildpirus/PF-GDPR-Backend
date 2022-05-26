@@ -13,46 +13,7 @@ class UsersService {
     this.pool.on('error', (err) => console.error(err));
   }
 
-  //Register
-  async create(data,email) {
-    const foundUser = await this.findByUsername(data.username);
-    if (foundUser) {
-      throw boom.conflict('Username in use');
-    }
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(data.password, salt);
-    await this.pool.query(
-      "insert into users values('0','"+data.username+"','"+hashedPassword+"','"+data.consent+"',CURRENT_DATE,null)"
-    );
-    const mail = {
-      from: config.smtpEmail,
-      to: `${email}`,
-      subject: "Bienvenido a GDPR-APP",
-      html: `<b>Estamos felices de que esté con nosotros. Sus credenciales de inicio de sesión son: </b><br>`+
-            `<b>Usuario: ${data.username}</b><br>`+
-            `<b>Contraseña: ${data.password}</b><br>`
-    }
-    await this.sendMail(mail);
-    return this.findByUsername(data.username);
-  }
-
-  //Login
-  async login(data) {
-    const result = await this.pool.query(
-      "select * from users where username='"+data.username+"' limit 1;"
-    );
-    const foundUser = result.rows[0];
-    if (!foundUser) {
-      throw boom.notFound('Username not found');
-    }
-    const matchedPassword = await bcrypt.compare(data.password, foundUser.password_);
-    if (!matchedPassword){
-      throw boom.unauthorized('Incorrect password');
-    }
-    delete foundUser.password_;
-    return foundUser;
-  }
-
+  //-------------------------------Public methods--------------------------------//
   //Create JWT
   async signToken(user, role){
     const userData = await this.getUserInfo(user.user_id, role)
@@ -96,21 +57,6 @@ class UsersService {
     return rta;
   }
 
-  // Send mail
-  async sendMail(infoMail) {
-    const transporter = nodemailer.createTransport({
-      host: config.mailHost,
-      secure: true, // true for 465, false for other ports
-      port: 465,
-      auth: {
-        user: config.mailUser,
-        pass: config.mailPassword
-      }
-    });
-    await transporter.sendMail(infoMail);
-    return { message: 'mail sent' };
-  }
-
   // Recover password
   async recoverPassword(token, newPassword) {
     try {
@@ -130,29 +76,7 @@ class UsersService {
     }
   }
 
-  // Get user
-  async findUserById(id){
-    const query = "select * from users where user_id = '"+id+"';";
-    const foundUser =  await this.pool.query(query);
-    if (foundUser.rowCount===0) {
-      throw boom.notFound('User not found');
-    }
-    delete foundUser.rows[0].password_;
-    return foundUser.rows[0];
-  }
-  async findByUsername(username) {
-    const query = "select * from users where username = '"+username+"';";
-    const foundUser =  await this.pool.query(query);
-    if(foundUser.rows[0]){
-      delete foundUser.rows[0].password_;
-    }
-    return foundUser.rows[0]
-  }
-  async findUserByEmail(email){
-    const query = "select email, user_id from v_persons where email = '"+email+"';";
-    const user =  await this.pool.query(query);
-    return user.rows[0];
-  }
+  // get user info
   async getUserInfo(user_id, role){
     if (role === 'patient' || role === 'employee'){
       const query = "select users.*, \n"+
@@ -177,6 +101,107 @@ class UsersService {
     }
   }
 
+  async changePassword(user_id, currentPassword, newPassword){
+    try {
+      const result = await this.pool.query(
+        "select * from users where user_id ='"+user_id+"' limit 1;"
+      );
+      const foundUser = result.rows[0];
+      if (!foundUser) {
+        throw boom.notFound('User not found');
+      }
+      const matchedPassword = await bcrypt.compare(currentPassword, foundUser.password_);
+      if (!matchedPassword){
+        throw boom.unauthorized('Incorrect password');
+      }
+      const hash = await bcrypt.hash(newPassword, 10);
+      const query = "update users \n" +
+                    "set password_ = '"+hash+"' \n" +
+                    "where user_id = '"+user_id+"';";
+      await this.pool.query(query);
+      return { message: 'password changed' };
+    } catch (error) {
+      throw boom.unauthorized();
+    }
+  }
+  //------------------------------Protected methods------------------------------//
+  // Register
+  async create(data,email) {
+    const foundUser = await this.findByUsername(data.username);
+    if (foundUser) {
+      throw boom.conflict('Username in use');
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(data.password, salt);
+    await this.pool.query(
+      "insert into users values('0','"+data.username+"','"+hashedPassword+"','"+data.consent+"',CURRENT_DATE,null)"
+    );
+    const mail = {
+      from: config.smtpEmail,
+      to: `${email}`,
+      subject: "Bienvenido a GDPR-APP",
+      html: `<b>Estamos felices de que esté con nosotros. Sus credenciales de inicio de sesión son: </b><br>`+
+            `<b>Usuario: ${data.username}</b><br>`+
+            `<b>Contraseña: ${data.password}</b><br>`
+    }
+    await this.sendMail(mail);
+    return this.findByUsername(data.username);
+  }
+
+  // Login
+  async login(data) {
+    const result = await this.pool.query(
+      "select * from users where username='"+data.username+"' limit 1;"
+    );
+    const foundUser = result.rows[0];
+    if (!foundUser) {
+      throw boom.notFound('Username not found');
+    }
+    const matchedPassword = await bcrypt.compare(data.password, foundUser.password_);
+    if (!matchedPassword){
+      throw boom.unauthorized('Incorrect password');
+    }
+    delete foundUser.password_;
+    return foundUser;
+  }
+
+  // Send mail
+  async sendMail(infoMail) {
+    const transporter = nodemailer.createTransport({
+      host: config.mailHost,
+      secure: true, // true for 465, false for other ports
+      port: 465,
+      auth: {
+        user: config.mailUser,
+        pass: config.mailPassword
+      }
+    });
+    await transporter.sendMail(infoMail);
+    return { message: 'mail sent' };
+  }
+  //-------------------------------Private methods-------------------------------//
+  // Get user
+  async findUserById(id){
+    const query = "select * from users where user_id = '"+id+"';";
+    const foundUser =  await this.pool.query(query);
+    if (foundUser.rows[0]) {
+      delete foundUser.rows[0].password_;
+    }
+    return foundUser.rows[0];
+  }
+  async findByUsername(username) {
+    const query = "select * from users where username = '"+username+"';";
+    const foundUser =  await this.pool.query(query);
+    if(foundUser.rows[0]){
+      delete foundUser.rows[0].password_;
+    }
+    return foundUser.rows[0]
+  }
+  async findUserByEmail(email){
+    const query = "select email, user_id from v_persons where email = '"+email+"';";
+    const user =  await this.pool.query(query);
+    return user.rows[0];
+  }
 }
 
 module.exports = UsersService;
