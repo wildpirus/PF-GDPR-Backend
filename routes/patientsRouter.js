@@ -25,7 +25,7 @@ const service = new PatientsService();
 // register all new patient
 router.post('/register-all-new',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('HUM'),
   validatorHandler(createUserSchema, 'body.user'),
   validatorHandler(createPersonSchema, 'body.person'),
   validatorHandler(createPatientSchema, 'body.patient'),
@@ -43,7 +43,7 @@ router.post('/register-all-new',
 // register new patient
 router.post('/register-new',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('HUM'),
   validatorHandler(createPatientWithPersonSchema, 'body'),
   async (req,res, next) => {
     try {

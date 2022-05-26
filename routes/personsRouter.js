@@ -29,7 +29,7 @@ router.get('/',
 // get person data by id number
 router.get('/get-person',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('HUM'),
   validatorHandler(getByIdNumberSchema, 'body'),
   async (req,res, next) => {
     try {
