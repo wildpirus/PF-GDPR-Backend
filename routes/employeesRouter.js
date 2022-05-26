@@ -114,4 +114,34 @@ router.get('/anonimized-data',
   }
 );
 
+// Get full data for third party
+router.get('/full-data',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('HUM'),
+  async (req,res, next) => {
+    try {
+      const data = await service.getFullDataForThridParty();
+      res.status(201).json(data);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Get full data of patient for third party
+router.get('/one-patient-full-data',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('HUM'),
+  async (req,res, next) => {
+    try {
+      const { id_number } = req.body;
+      const data = await service.getPatientForThridParty(id_number);
+      res.status(201).json(data);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
 module.exports = router;

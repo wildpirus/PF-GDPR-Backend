@@ -22,7 +22,11 @@ class PatientsService {
   async createAllNewPatient(data) {
     const {person_id, patient_id} = await personsService.isIdRegistered(data.person.id_number);
     if (person_id || patient_id){
-      await personsService.sendWarningEmail(person_id);
+      await personsService.sendWarningEmail({
+        person_id: person_id,
+        subject: "Aviso de brecha de datos",
+        html: `<b>Alguien ha intentado crear una cuenta con su numero de identificación. Contáctese con nosotros para más información.</b>`
+      });
       throw boom.conflict("There's someone already registered.");
     } else {
       const newUser = await usersService.create(data.user, data.person.email);
