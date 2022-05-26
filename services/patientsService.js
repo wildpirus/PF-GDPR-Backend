@@ -41,6 +41,8 @@ class PatientsService {
         newPatient.height+"','"+
         newPatient.weight+"','"+
         newPatient.rh+"','"+
+        newPatient.full_consent+"','"+
+        newPatient.part_consent+"','"+
         person_id+"');"
     );
     return { created: true };//this.viewPatientData(data.person_id);
@@ -95,7 +97,7 @@ class PatientsService {
     const result = await this.pool.query(query);
     return result.rows[0];
   }
-  
+
 }
 
 module.exports = PatientsService;

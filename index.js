@@ -16,7 +16,8 @@ app.use(express.json());
 const whitelist = ['http://localhost:8080', config.feUrl];
 const options = {
   origin: (origin, callback) => {
-    if (whitelist.includes(origin)) {
+    console.log("origin: ",origin);
+    if (whitelist.includes(origin) || !origin) {
       callback(null, true);
     } else {
       callback(new Error('no permitido'));

@@ -142,7 +142,9 @@ class UsersService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(data.password, salt);
     await this.pool.query(
-      "insert into users values('0','"+data.username+"','"+hashedPassword+"','"+data.consent+"',CURRENT_DATE,null)"
+      "insert into users values('0','"+
+      data.username+"','"+
+      hashedPassword+"',CURRENT_DATE,null);"
     );
     const mail = {
       from: config.smtpEmail,
