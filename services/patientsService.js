@@ -136,6 +136,31 @@ class PatientsService {
     return {message: "successful update"};
   }
 
+  // Get appointments info
+  async getAppointmentInfo(patient_id){
+    const query = (
+      "select care.careid, \n"+
+      "       care.employee_id, \n"+
+      "       v_persons.first_name, \n"+
+      "       v_persons.last_name, \n"+
+      "       care.reason, \n"+
+      "       care.care_date \n"+
+      "from care \n"+
+      "join employees \n"+
+      "    on employees.employee_id = care.employee_id \n"+
+      "join v_persons \n"+
+      "    on v_persons.person_id = employees.person_id \n"+
+      "where care.patient_id = '"+patient_id+"';"
+    );
+    const result = await this.pool.query(query);
+    const data = result.rows;
+    if (data){
+      return data;
+    } else {
+      throw boom.notFound("You have no appointments");
+    }
+  }
+
   //-------------------------------Private methods-------------------------------//
   async findPatientByPersonId(person_id) {
     const foundPatient = await this.pool.query(
