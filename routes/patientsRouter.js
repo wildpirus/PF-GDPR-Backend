@@ -14,13 +14,15 @@ const {
   createPatientSchema,
   createPatientWithPersonSchema,
   updateConsentsSchema,
-  getPatientSchema
+  getPatientSchema,
+  updatePatientSchema
 } = require('../schemas/patientSchema');
 
 
 const router = express.Router();
 const service = new PatientsService();
 
+// register all new patient
 router.post('/register-all-new',
   passport.authenticate('jwt', {session: false}),
   checkRoles('MED'),
@@ -38,6 +40,7 @@ router.post('/register-all-new',
   }
 );
 
+// register new patient
 router.post('/register-new',
   passport.authenticate('jwt', {session: false}),
   checkRoles('MED'),
@@ -53,6 +56,7 @@ router.post('/register-new',
   }
 );
 
+// get my basic data
 router.get('/my-basic-data',
   passport.authenticate('jwt', {session: false}),
   checkRoles('patient'),
@@ -67,6 +71,7 @@ router.get('/my-basic-data',
   }
 );
 
+// get my patient history
 router.get('/all-my-data',
   passport.authenticate('jwt', {session: false}),
   checkRoles('patient'),
@@ -81,6 +86,7 @@ router.get('/all-my-data',
   }
 );
 
+// update consents of a patient
 router.patch('/update-consents',
   passport.authenticate('jwt', {session: false}),
   checkRoles('patient'),
@@ -97,6 +103,7 @@ router.patch('/update-consents',
   }
 );
 
+// get patient history for med
 router.get('/patient-history',
   passport.authenticate('jwt', {session: false}),
   checkRoles('MED'),
@@ -105,6 +112,22 @@ router.get('/patient-history',
     try {
       const { patient_id } = req.body;
       const patient = await service.getPatientHistory(patient_id);
+      res.status(201).json(patient);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// update patient basic info
+router.patch('/update-info',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('MED'),
+  validatorHandler(updatePatientSchema, 'body'),
+  async (req,res, next) => {
+    try {
+      const body = req.body;
+      const patient = await service.update(body);
       res.status(201).json(patient);
     } catch (error) {
       next(error);

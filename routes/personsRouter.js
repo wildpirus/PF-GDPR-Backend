@@ -58,6 +58,7 @@ router.get('/verify-id-number',
   }
 );
 
+// update my person info
 router.put('/update-info',
   passport.authenticate('jwt', {session: false}),
   validatorHandler(createPersonSchema, 'body'),

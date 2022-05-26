@@ -34,9 +34,17 @@ const getPatientSchema = Joi.object({
   patient_id: patient_id.required()
 });
 
+const updatePatientSchema = Joi.object({
+  height: height,
+  weight: weight,
+  rh: rh.required(),
+  patient_id: patient_id.required()
+});
+
 module.exports = {
   createPatientSchema,
   createPatientWithPersonSchema,
   updateConsentsSchema,
-  getPatientSchema
+  getPatientSchema,
+  updatePatientSchema
 }

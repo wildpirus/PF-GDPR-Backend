@@ -118,6 +118,20 @@ class PatientsService {
     }
   }
 
+  // Update patient info
+  async update(data){
+    const query = (
+      "update patients \n"+
+      "set \n"+
+      "    height = '"+data.height+"', \n"+
+      "    weight = '"+data.weight+"', \n"+
+      "    rh = '"+data.rh+"' \n"+
+      "where patient_id = '"+data.patient_id+"';"
+    );
+    await this.pool.query(query);
+    return {message: "successful update"};
+  }
+
   //-------------------------------Private methods-------------------------------//
   async findPatientByPersonId(person_id) {
     const foundPatient = await this.pool.query(
