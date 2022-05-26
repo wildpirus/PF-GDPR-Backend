@@ -30,6 +30,7 @@ class EmployeesService {
       return await this.create(data.employee,newPerson.person_id);
     }
   }
+
   //Register new employee
   async create(newEmployee,person_id){
     const foundEmployee = await this.findEmployeeByPersonId(person_id);
@@ -42,6 +43,29 @@ class EmployeesService {
         person_id+"');"
     );
     return { created: true };//this.viewEmployeeData(data.person_id);
+  }
+
+  //get employee data
+  async getEmployeeData(employee_id){
+    const query = (
+      "select v_persons.*, employees.* \n"+
+      "from employees \n"+
+      "join v_persons \n"+
+      "    on v_persons.person_id = employees.person_id \n"+
+      "where employees.employee_id = '"+employee_id+"' \n"+
+      "limit 1;"
+    );
+    const result = await this.pool.query(query);
+    const data = result.rows[0];
+    if (data){
+      delete data.person_id;
+      delete data.user_id;
+      delete data.attendant_id;
+      delete data.employee_id;
+      return data;
+    } else {
+      throw boom.notFound("Employee not found");
+    }
   }
 
   //-------------------------------Private methods-------------------------------//
