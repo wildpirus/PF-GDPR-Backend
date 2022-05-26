@@ -86,4 +86,17 @@ router.post('/change-password',
   }
 );
 
+// Delete my user
+router.delete('/delete-my-user',
+  passport.authenticate('jwt', {session: false}),
+  async (req, res, next) => {
+    try {
+      const { user_id } = req.user;
+      res.json(await service.delete(user_id));
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 module.exports = router;

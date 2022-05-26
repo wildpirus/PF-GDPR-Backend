@@ -101,6 +101,7 @@ class UsersService {
     }
   }
 
+  // Change password
   async changePassword(user_id, currentPassword, newPassword){
     try {
       const result = await this.pool.query(
@@ -124,6 +125,13 @@ class UsersService {
       throw boom.unauthorized();
     }
   }
+
+  // Delete User
+  async delete(user_id){
+    this.pool.query("delete from users where user_id = '"+user_id+"';");
+    return {message: "successful delete!"};
+  }
+
   //------------------------------Protected methods------------------------------//
   // Register
   async create(data,email) {
