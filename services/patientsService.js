@@ -85,6 +85,17 @@ class PatientsService {
     }
   }
 
+
+  // Modify consents
+  async updateConsents(patient_id,full_consent,part_consent){
+    const query = (
+      "update patients \n"+
+      "set full_consent = "+full_consent+", part_consent = "+part_consent+" \n"+
+      "where patient_id = '"+patient_id+"';"
+    );
+    await this.pool.query(query);
+    return {message: "consent changed"}
+  }
   //-------------------------------Private methods-------------------------------//
   async findPatientByPersonId(person_id) {
     const foundPatient = await this.pool.query(

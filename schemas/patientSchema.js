@@ -24,7 +24,13 @@ const createPatientWithPersonSchema = Joi.object({
   person_id: person_id.required()
 });
 
+const updateConsentsSchema = Joi.object({
+  full_consent: consent.required(),
+  part_consent: consent.required()
+});
+
 module.exports = {
   createPatientSchema,
-  createPatientWithPersonSchema
+  createPatientWithPersonSchema,
+  updateConsentsSchema
 }
