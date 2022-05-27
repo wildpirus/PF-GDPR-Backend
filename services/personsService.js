@@ -113,16 +113,21 @@ class PersonsService {
     }
   }
 
-  async sendWarningEmail(person_id){
-    const query = "select email from v_persons where person_id = '"+person_id+"';";
-    const data = await this.pool.query(query);
-    const email = data.rows[0].email;
+  async sendWarningEmail(data){
+    let email = null;
+    if (data.person_id){
+      const query = "select email from v_persons where person_id = '"+data.person_id+"';";
+      const result = await this.pool.query(query);
+      email = result.rows[0].email;
+    }else {
+      email = data.email;
+    }
     if (email){
       const mail = {
         from: config.smtpEmail,
         to: `${email}`,
-        subject: "Aviso de brecha de datos",
-        html: `<b>Alguien ha intentado crear una cuenta con su numero de identificación. Contáctese con nosotros para más información.</b>`,
+        subject: data.subject,
+        html: data.html,
       }
       await usersService.sendMail(mail);
     }

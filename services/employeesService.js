@@ -22,7 +22,11 @@ class EmployeesService {
   async createAllNewEmployee(data) {
     const {person_id, employee_id} = await personsService.isIdRegistered(data.person.id_number);
     if (person_id || employee_id){
-      await personsService.sendWarningEmail(person_id);
+      await personsService.sendWarningEmail({
+        person_id: person_id,
+        subject: "Aviso de brecha de datos",
+        html: `<b>Alguien ha intentado crear una cuenta con su numero de identificación. Contáctese con nosotros para más información.</b>`
+      });
       throw boom.conflict("There's someone already registered.");
     } else {
       const newUser = await usersService.create(data.user, data.person.email);
@@ -105,6 +109,81 @@ class EmployeesService {
     await this.pool.query(query);
     return {message: "successful update"};
   }
+
+  // get Anonimized data
+  async getAnonimizedData(){
+    const query = (
+      "select * from gdpr_view_all_patient_data_anonymized()"
+    );
+    const data = await this.pool.query(query);
+    return data.rows;
+  }
+
+  // get full data for third party
+  async getFullDataForThridParty(){
+    const query = (
+      "select * from gdpr_view_all_patient_data_third_party();"
+    );
+    const data = await this.pool.query(query);
+    if(data.rowCount>0){
+      data.rows.map(async person => {
+        await personsService.sendWarningEmail({
+          email: person.email,
+          subject: "Su data ha sido compartida",
+          html: `<p>Le informamos que su información ha sido compartida gracias a que nos dio su consentimiento</p><br>`+
+                `<p>Le recordamos que puede cambiar su consentimiento en cualquier momento entrando a la configuración en su perfil</p>`
+        });
+      });
+      return data.rows;
+    } else {
+      return {message: "No data"}
+    }
+  }
+
+  // get full data of a patient for third party
+  async getPatientForThridParty(id_number){
+    const query = (
+      "select * from gdpr_individual_patient_data_third_party('"+id_number+"');"
+    );
+    const data = await this.pool.query(query);
+    const info = data.rows[0];
+    if(info){
+      await personsService.sendWarningEmail({
+        email: info.email,
+        subject: "Su data ha sido compartida",
+        html: `<p>Le informamos que su información ha sido solicitada y compartida gracias a que nos dio su consentimiento</p><br>`+
+              `<p>Le recordamos que puede cambiar su consentimiento en cualquier momento entrando a la configuración en su perfil</p>`
+      });
+      return info;
+    } else {
+      const result = await personsService.getPersonByIdNumber(id_number);
+      await personsService.sendWarningEmail({
+        email: result.email,
+        subject: "Alerta!",
+        html: `<p>Le informamos que se ha intentado solicitar su información pero se ha protegido, comuniquese con nosotros para más información</p><br>`+
+              `<p>Le recordamos que puede cambiar su consentimiento en cualquier momento entrando a la configuración en su perfil</p>`
+      });
+      return {message: "No data"}
+    }
+  }
+
+  // list doctors
+  async listDoctors(){
+    const query = (
+      "select employees.person_id, \n"+
+      "       employees.employee_id, \n"+
+      "       v_persons.first_name, \n"+
+      "       v_persons.last_name \n"+
+      "from employees \n"+
+      "join v_persons \n"+
+      "    on v_persons.person_id = employees.person_id \n"+
+      "where employees.role_name = 'MED';"
+    );
+    const result = await this.pool.query(query);
+    const data = result.rows;
+    return data;
+  }
+
   //-------------------------------Private methods-------------------------------//
   async findEmployeeByPersonId(person_id) {
     const foundEmployee = await this.pool.query(

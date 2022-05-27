@@ -25,7 +25,7 @@ const service = new PatientsService();
 // register all new patient
 router.post('/register-all-new',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('HUM'),
   validatorHandler(createUserSchema, 'body.user'),
   validatorHandler(createPersonSchema, 'body.person'),
   validatorHandler(createPatientSchema, 'body.patient'),
@@ -43,7 +43,7 @@ router.post('/register-all-new',
 // register new patient
 router.post('/register-new',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('HUM'),
   validatorHandler(createPatientWithPersonSchema, 'body'),
   async (req,res, next) => {
     try {
@@ -128,6 +128,21 @@ router.patch('/update-info',
     try {
       const body = req.body;
       const patient = await service.update(body);
+      res.status(201).json(patient);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// get my appointments
+router.get('/my-appointments',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('patient'),
+  async (req,res, next) => {
+    try {
+      const { patient_id } = req.user;
+      const patient = await service.getAppointmentInfo(patient_id);
       res.status(201).json(patient);
     } catch (error) {
       next(error);

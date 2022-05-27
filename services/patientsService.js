@@ -22,7 +22,11 @@ class PatientsService {
   async createAllNewPatient(data) {
     const {person_id, patient_id} = await personsService.isIdRegistered(data.person.id_number);
     if (person_id || patient_id){
-      await personsService.sendWarningEmail(person_id);
+      await personsService.sendWarningEmail({
+        person_id: person_id,
+        subject: "Aviso de brecha de datos",
+        html: `<b>Alguien ha intentado crear una cuenta con su numero de identificación. Contáctese con nosotros para más información.</b>`
+      });
       throw boom.conflict("There's someone already registered.");
     } else {
       const newUser = await usersService.create(data.user, data.person.email);
@@ -130,6 +134,31 @@ class PatientsService {
     );
     await this.pool.query(query);
     return {message: "successful update"};
+  }
+
+  // Get appointments info
+  async getAppointmentInfo(patient_id){
+    const query = (
+      "select care.careid, \n"+
+      "       care.employee_id, \n"+
+      "       v_persons.first_name, \n"+
+      "       v_persons.last_name, \n"+
+      "       care.reason, \n"+
+      "       care.care_date \n"+
+      "from care \n"+
+      "join employees \n"+
+      "    on employees.employee_id = care.employee_id \n"+
+      "join v_persons \n"+
+      "    on v_persons.person_id = employees.person_id \n"+
+      "where care.patient_id = '"+patient_id+"';"
+    );
+    const result = await this.pool.query(query);
+    const data = result.rows;
+    if (data){
+      return data;
+    } else {
+      throw boom.notFound("You have no appointments");
+    }
   }
 
   //-------------------------------Private methods-------------------------------//
