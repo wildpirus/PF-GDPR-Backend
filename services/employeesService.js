@@ -166,6 +166,24 @@ class EmployeesService {
       return {message: "No data"}
     }
   }
+
+  // list doctors
+  async listDoctors(){
+    const query = (
+      "select employees.person_id, \n"+
+      "       employees.employee_id, \n"+
+      "       v_persons.first_name, \n"+
+      "       v_persons.last_name \n"+
+      "from employees \n"+
+      "join v_persons \n"+
+      "    on v_persons.person_id = employees.person_id \n"+
+      "where employees.role_name = 'MED';"
+    );
+    const result = await this.pool.query(query);
+    const data = result.rows;
+    return data;
+  }
+
   //-------------------------------Private methods-------------------------------//
   async findEmployeeByPersonId(person_id) {
     const foundEmployee = await this.pool.query(

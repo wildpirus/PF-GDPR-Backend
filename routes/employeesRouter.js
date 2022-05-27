@@ -143,5 +143,18 @@ router.get('/one-patient-full-data',
   }
 );
 
+// Get list of doctors
+router.get('/doctors',
+  passport.authenticate('jwt', {session: false}),
+  checkRoles('HUM'),
+  async (req,res, next) => {
+    try {
+      const data = await service.listDoctors();
+      res.status(201).json(data);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 module.exports = router;
