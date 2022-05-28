@@ -5,6 +5,7 @@ const nodemailer = require('nodemailer');
 
 const pool = require('../libs/postgresPool');
 const { config } = require('../config/config');
+const format = require('../utils/formatResponse');
 
 class UsersService {
 
@@ -42,19 +43,25 @@ class UsersService {
     }
     const payload = { user_id: user.user_id };
     const token = jwt.sign(payload, config.jwtSecret, {expiresIn: '15min'});
-    const link = `http://myfrontend.com/recovery?token=${token}`;
-    const query = "update users \n" +
-                  "set recovery_token = '"+token+"' \n" +
-                  "where user_id = '"+user.user_id+"';";
-    await this.pool.query(query);
-    const mail = {
-      from: config.smtpEmail,
-      to: `${user.email}`,
-      subject: "Email para recuperar contraseña",
-      html: `<b>Tiene 15 minutos para cambiar la contraseña. Ingresa a este link => ${link}</b>`,
+    const link = `${config.feUrl}/recovery?token=${token}`;
+    const query = (
+      "update users \n" +
+      "set recovery_token = '"+token+"' \n" +
+      "where user_id = '"+user.user_id+"';"
+    );
+    const result = await this.pool.query(query);
+    if (result.rowCount===1){
+      const mail = {
+        from: config.smtpEmail,
+        to: `${user.email}`,
+        subject: "Email para recuperar contraseña",
+        html: `<b>Tiene 15 minutos para cambiar la contraseña. Ingresa a este link => ${link}</b>`,
+      }
+      const rta = await this.sendMail(mail);
+      return rta;
+    }else {
+      throw boom.badImplementation();
     }
-    const rta = await this.sendMail(mail);
-    return rta;
   }
 
   // Recover password
@@ -64,13 +71,20 @@ class UsersService {
       const user = await this.findUserById(payload.user_id);
       if (user.recovery_token !== token) {
         throw boom.unauthorized();
+      } else {
+        const hash = await bcrypt.hash(newPassword, 10);
+        const query = (
+          "update users \n" +
+          "set recovery_token = null, password_ = '"+hash+"' \n" +
+          "where user_id = '"+user.user_id+"';"
+        );
+        const result = await this.pool.query(query);
+        if (result.rowCount===1){
+          return { message: 'password changed' };
+        }else {
+          throw boom.badImplementation();
+        }
       }
-      const hash = await bcrypt.hash(newPassword, 10);
-      const query = "update users \n" +
-                    "set recovery_token = null, password_ = '"+hash+"' \n" +
-                    "where user_id = '"+user.user_id+"';";
-      await this.pool.query(query);
-      return { message: 'password changed' };
     } catch (error) {
       throw boom.unauthorized();
     }
@@ -79,23 +93,27 @@ class UsersService {
   // get user info
   async getUserInfo(user_id, role){
     if (role === 'patient' || role === 'employee'){
-      const query = "select users.*, \n"+
-                    "       persons.person_id, \n"+
-                    "       "+role+"s."+role+"_id, \n       "+
-                    (role === 'patient' ? "'patient' role_name \n" : "employees.role_name \n") +
-                    "from users \n"+
-                    "join persons \n"+
-                    "   on persons.user_id = users.user_id \n"+
-                    "join "+role+"s \n"+
-                    "   on "+role+"s.person_id = persons.person_id \n"+
-                    "where users.user_id = '"+user_id+"' \n"+
-                    "limit 1;";
+      const query = (
+        "select users.*, \n"+
+        "       persons.person_id, \n"+
+        "       "+role+"s."+role+"_id, \n       "+
+        (role === 'patient' ? "'patient' role_name \n" : "employees.role_name \n") +
+        "from users \n"+
+        "join persons \n"+
+        "   on persons.user_id = users.user_id \n"+
+        "join "+role+"s \n"+
+        "   on "+role+"s.person_id = persons.person_id \n"+
+        "where users.user_id = '"+user_id+"' \n"+
+        "limit 1;"
+      );
       const data =  await this.pool.query(query);
       if(data.rowCount === 0){
         throw boom.notFound('User is not registered as a(n) '+role+'.');
+      } else {
+        delete data.rows[0].recovery_token;
+        delete data.rows[0].password_;
+        return format(data.rows)[0];
       }
-      delete data.rows[0].password_;
-      return data.rows[0];
     } else {
       throw boom.unauthorized('Role not allowed.');
     }
@@ -110,17 +128,25 @@ class UsersService {
       const foundUser = result.rows[0];
       if (!foundUser) {
         throw boom.notFound('User not found');
+      } else {
+        const matchedPassword = await bcrypt.compare(currentPassword, foundUser.password_);
+        if (!matchedPassword){
+          throw boom.unauthorized('Incorrect password');
+        } else {
+          const hash = await bcrypt.hash(newPassword, 10);
+          const query = (
+            "update users \n" +
+            "set password_ = '"+hash+"' \n" +
+            "where user_id = '"+user_id+"';"
+          );
+          const result = await this.pool.query(query);
+          if (result.rowCount===1){
+            return { message: 'password changed' };
+          }else {
+            return {message: "Error"};
+          }
+        }
       }
-      const matchedPassword = await bcrypt.compare(currentPassword, foundUser.password_);
-      if (!matchedPassword){
-        throw boom.unauthorized('Incorrect password');
-      }
-      const hash = await bcrypt.hash(newPassword, 10);
-      const query = "update users \n" +
-                    "set password_ = '"+hash+"' \n" +
-                    "where user_id = '"+user_id+"';";
-      await this.pool.query(query);
-      return { message: 'password changed' };
     } catch (error) {
       throw boom.unauthorized();
     }
@@ -128,8 +154,13 @@ class UsersService {
 
   // Delete User
   async delete(user_id){
-    this.pool.query("delete from users where user_id = '"+user_id+"';");
-    return {message: "successful delete!"};
+    const query = ("delete from users where user_id = '"+user_id+"';");
+    const result = await this.pool.query(query);
+    if (result.rowCount===1){
+      return {message: "successful delete!"};
+    }else {
+      return {message: "Error"};
+    }
   }
 
   //------------------------------Protected methods------------------------------//
@@ -138,24 +169,30 @@ class UsersService {
     const foundUser = await this.findByUsername(data.username);
     if (foundUser) {
       throw boom.conflict('Username in use');
+    } else {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(data.password, salt);
+      const query = (
+        "insert into users values('0','"+
+        data.username+"','"+
+        hashedPassword+"',CURRENT_DATE,null);"
+      );
+      const result = await this.pool.query(query);
+      if (result.rowCount===1){
+        const mail = {
+          from: config.smtpEmail,
+          to: `${email}`,
+          subject: "Bienvenido a GDPR-APP",
+          html: `<b>Estamos felices de que esté con nosotros. Sus credenciales de inicio de sesión son: </b><br>`+
+                `<b>Usuario: ${data.username}</b><br>`+
+                `<b>Contraseña: ${data.password}</b><br>`
+        }
+        await this.sendMail(mail);
+        return this.findByUsername(data.username);
+      }else {
+        return {message: "Error"};
+      }
     }
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(data.password, salt);
-    await this.pool.query(
-      "insert into users values('0','"+
-      data.username+"','"+
-      hashedPassword+"',CURRENT_DATE,null);"
-    );
-    const mail = {
-      from: config.smtpEmail,
-      to: `${email}`,
-      subject: "Bienvenido a GDPR-APP",
-      html: `<b>Estamos felices de que esté con nosotros. Sus credenciales de inicio de sesión son: </b><br>`+
-            `<b>Usuario: ${data.username}</b><br>`+
-            `<b>Contraseña: ${data.password}</b><br>`
-    }
-    await this.sendMail(mail);
-    return this.findByUsername(data.username);
   }
 
   // Login
@@ -171,6 +208,7 @@ class UsersService {
     if (!matchedPassword){
       throw boom.unauthorized('Incorrect password');
     }
+    delete foundUser.recovery_token;
     delete foundUser.password_;
     return foundUser;
   }
@@ -186,8 +224,13 @@ class UsersService {
         pass: config.mailPassword
       }
     });
-    await transporter.sendMail(infoMail);
-    return { message: 'mail sent' };
+    const result = await transporter.sendMail(infoMail);
+    if (result.accepted.length > 0){
+      return { message: 'mail sent.' };
+    }else {
+      return { message: 'mail not sent.' };
+    }
+
   }
   //-------------------------------Private methods-------------------------------//
   // Get user

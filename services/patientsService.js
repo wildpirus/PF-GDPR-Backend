@@ -6,6 +6,7 @@ const { config } = require('../config/config');
 
 const UsersService = require('../services/usersService');
 const PersonsService = require('../services/personsService');
+const format = require('../utils/formatResponse');
 
 const usersService = new UsersService();
 const personsService = new PersonsService();
@@ -39,17 +40,23 @@ class PatientsService {
     const foundPatient = await this.findPatientByPersonId(person_id);
     if (foundPatient) {
       throw boom.conflict('A patient already exist for this person.');
-    }
-    await this.pool.query(
-      "insert into patients values('0','"+
+    } else {
+      const query = (
+        "insert into patients values('0','"+
         newPatient.height+"','"+
         newPatient.weight+"','"+
         newPatient.rh+"','"+
         person_id+"','"+
         newPatient.full_consent+"','"+
         newPatient.part_consent+"');"
-    );
-    return { created: true };//this.viewPatientData(data.person_id);
+      );
+      const result = await this.pool.query(query);
+      if (result.rowCount===1){
+        return {message: "Created"};
+      }else {
+        throw boom.badImplementation();
+      }
+    }
   }
 
   //get patient data
@@ -63,12 +70,12 @@ class PatientsService {
       "limit 1;"
     );
     const result = await this.pool.query(query);
-    const data = result.rows[0];
+    delete result.rows[0].person_id;
+    delete result.rows[0].user_id;
+    delete result.rows[0].attendant_id;
+    delete result.rows[0].patient_id;
+    const data = format(result.rows)[0];
     if (data){
-      delete data.person_id;
-      delete data.user_id;
-      delete data.attendant_id;
-      delete data.patient_id;
       return data;
     } else {
       throw boom.notFound("Patient not found");
@@ -83,7 +90,8 @@ class PatientsService {
     const result = await this.pool.query(query);
     const data = result.rows;
     if (data){
-      return data
+      const formated = format(data);
+      return {formated,data};
     } else {
       throw boom.notFound("Patient not found");
     }
@@ -97,8 +105,12 @@ class PatientsService {
       "set full_consent = "+full_consent+", part_consent = "+part_consent+" \n"+
       "where patient_id = '"+patient_id+"';"
     );
-    await this.pool.query(query);
-    return {message: "consent changed"}
+    const result = await this.pool.query(query);
+    if (result.rowCount===1){
+      return {message: "consent changed"};
+    }else {
+      return {message: "Error"};
+    }
   }
 
   // Get info for employee
@@ -116,7 +128,8 @@ class PatientsService {
     const data = await this.pool.query(query);
     const { user_id } = data.rows[0];
     if (user_id) {
-      return await this.getAllPatientData(user_id)
+      const result = await this.getAllPatientData(user_id);
+      return result.formated;
     }else {
       throw boom.notFound();
     }
@@ -132,8 +145,12 @@ class PatientsService {
       "    rh = '"+data.rh+"' \n"+
       "where patient_id = '"+data.patient_id+"';"
     );
-    await this.pool.query(query);
-    return {message: "successful update"};
+    const result = await this.pool.query(query);
+    if (result.rowCount===1){
+      return {message: "successful update"};
+    }else {
+      return {message: "Error"};
+    }
   }
 
   // Get appointments info
@@ -141,8 +158,7 @@ class PatientsService {
     const query = (
       "select care.careid, \n"+
       "       care.employee_id, \n"+
-      "       v_persons.first_name, \n"+
-      "       v_persons.last_name, \n"+
+      "       v_persons.first_name || ' ' || v_persons.last_name med_name, \n"+
       "       care.reason, \n"+
       "       care.care_date \n"+
       "from care \n"+
@@ -153,7 +169,7 @@ class PatientsService {
       "where care.patient_id = '"+patient_id+"';"
     );
     const result = await this.pool.query(query);
-    const data = result.rows;
+    const data = format(result.rows);
     if (data){
       return data;
     } else {

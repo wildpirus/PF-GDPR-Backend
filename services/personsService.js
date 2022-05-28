@@ -4,6 +4,7 @@ const pool = require('../libs/postgresPool');
 
 const { config } = require('../config/config');
 const UsersService = require('../services/usersService');
+const format = require('../utils/formatResponse');
 
 const usersService = new UsersService();
 
@@ -18,7 +19,7 @@ class PersonsService {
   // get person by person id
   async getPersonById(person_id){
     const data = await this.pool.query("select * from v_persons where person_id = '"+person_id+"';");
-    const person = data.rows[0];
+    const person = format(data.rows)[0];
     if (person) {
       return person;
     } else {
@@ -29,7 +30,7 @@ class PersonsService {
   // get person by id number
   async getPersonByIdNumber(id_number){
     const data = await this.pool.query("select * from v_persons where id_number = '"+id_number+"' limit 1;");
-    const person = data.rows[0];
+    const person = format(data.rows)[0];
     if (person) {
       return person
     } else {
@@ -50,7 +51,7 @@ class PersonsService {
       "    on employees.person_id = v_persons.person_id \n"+
       "where v_persons.id_number = '"+id_number+"' \n"+
       "limit 1;"
-      );
+    );
     const data = await this.pool.query(query);
     const result = data.rows[0];
     if (result){
@@ -85,9 +86,12 @@ class PersonsService {
       "    birth_date = '"+data.birth_date+"', \n"+
       "    id_expedition_date = '"+data.id_expedition_date+"' \n"+
       "where person_id = '"+person_id+"';"
-    );
-    await this.pool.query(query);
-    return {message: "successful update"};
+    );const result = await this.pool.query(query);
+    if (result.rowCount===1){
+      return {message: "successful update"};
+    }else {
+      throw boom.badImplementation()
+    }
   }
   //------------------------------Protected methods------------------------------//
   async create(data,user_id) {
@@ -95,7 +99,8 @@ class PersonsService {
     if (foundPatient){
       throw boom.conflict('A patient is already asociated with the account');
     } else {
-      const query = "insert into persons values ('0', '"+
+      const query = (
+        "insert into persons values ('0', '"+
         data.first_name+"', '"+
         data.last_name+"', '"+
         data.gender+"', '"+
@@ -107,9 +112,14 @@ class PersonsService {
         data.phone_number+"','"+
         user_id+"',null,'"+
         data.birth_date+"', '"+
-        data.id_expedition_date+"');";
-      await this.pool.query(query);
-      return this.findPersonByUserId(user_id);
+        data.id_expedition_date+"');"
+      );
+      const result = await this.pool.query(query);
+      if (result.rowCount===1){
+        return this.findPersonByUserId(user_id);
+      }else {
+        return {message: "Error"};
+      }
     }
   }
 
@@ -135,7 +145,7 @@ class PersonsService {
 
   //-------------------------------Private methods-------------------------------//
   async findPersonByUserId(user_id) {
-    const person = await this.pool.query("select * from v_persons where user_id = '"+user_id+"';");
+    const person = await this.pool.query("select person_id from v_persons where user_id = '"+user_id+"';");
     return person.rows[0];
   }
 

@@ -11,7 +11,6 @@ function checkAdminRole(req, res, next) {
   }
 }
 
-
 function checkRoles(...roles) {
   return (req, res, next) => {
     const user = req.user;

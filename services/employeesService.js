@@ -6,6 +6,7 @@ const { config } = require('../config/config');
 
 const UsersService = require('../services/usersService');
 const PersonsService = require('../services/personsService');
+const format = require('../utils/formatResponse');
 
 const usersService = new UsersService();
 const personsService = new PersonsService();
@@ -40,13 +41,18 @@ class EmployeesService {
     const foundEmployee = await this.findEmployeeByPersonId(person_id);
     if (foundEmployee) {
       throw boom.conflict('A employee already exist for this person.');
-    }
-    await this.pool.query(
+    } else {const query = (
       "insert into employees values('0','"+
         newEmployee.role_name+"','"+
         person_id+"');"
-    );
-    return { created: true };//this.viewEmployeeData(data.person_id);
+      );
+      const result = await this.pool.query(query);
+      if (result.rowCount===1){
+        return {message: "Created"};//this.viewEmployeeData(data.person_id);
+      }else {
+        throw boom.badImplementation();
+      }
+    }
   }
 
   //get employee data
@@ -60,12 +66,12 @@ class EmployeesService {
       "limit 1;"
     );
     const result = await this.pool.query(query);
-    const data = result.rows[0];
+    delete result.rows[0].person_id;
+    delete result.rows[0].user_id;
+    delete result.rows[0].attendant_id;
+    delete result.rows[0].employee_id;
+    const data = format(result.rows)[0];
     if (data){
-      delete data.person_id;
-      delete data.user_id;
-      delete data.attendant_id;
-      delete data.employee_id;
       return data;
     } else {
       throw boom.notFound("Employee not found");
@@ -77,8 +83,7 @@ class EmployeesService {
     const query = (
       "select care.careid, \n"+
       "       care.patient_id, \n"+
-      "       v_persons.first_name, \n"+
-      "       v_persons.last_name, \n"+
+      "       v_persons.first_name || ' ' || v_persons.last_name pat_name, \n"+
       "       date_part('year', age(v_persons.birth_date::date))::int, \n"+
       "       care.reason, \n"+
       "       care.care_date \n"+
@@ -90,7 +95,7 @@ class EmployeesService {
       "where care.employee_id = '"+employee_id+"';"
     );
     const result = await this.pool.query(query);
-    const data = result.rows;
+    const data = format(result.rows);
     if (data){
       return data;
     } else {
@@ -106,8 +111,12 @@ class EmployeesService {
       "    role_name = '"+data.role_name+"' \n"+
       "where employee_id = '"+data.employee_id+"';"
     );
-    await this.pool.query(query);
-    return {message: "successful update"};
+    const result = await this.pool.query(query);
+    if (result.rowCount===1){
+      return {message: "Successful update"};
+    }else {
+      throw boom.badImplementation();
+    }
   }
 
   // get Anonimized data
@@ -180,7 +189,7 @@ class EmployeesService {
       "where employees.role_name = 'MED';"
     );
     const result = await this.pool.query(query);
-    const data = result.rows;
+    const data = format(result.rows);
     return data;
   }
 
