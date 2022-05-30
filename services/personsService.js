@@ -4,7 +4,7 @@ const pool = require('../libs/postgresPool');
 
 const { config } = require('../config/config');
 const UsersService = require('../services/usersService');
-const format = require('../utils/formatResponse');
+//const format = require('../utils/formatResponse');
 
 const usersService = new UsersService();
 
@@ -19,7 +19,7 @@ class PersonsService {
   // get person by person id
   async getPersonById(person_id){
     const data = await this.pool.query("select * from v_persons where person_id = '"+person_id+"';");
-    const person = format(data.rows)[0];
+    const person = (data.rows)[0];
     if (person) {
       return person;
     } else {
@@ -30,7 +30,7 @@ class PersonsService {
   // get person by id number
   async getPersonByIdNumber(id_number){
     const data = await this.pool.query("select * from v_persons where id_number = '"+id_number+"' limit 1;");
-    const person = format(data.rows)[0];
+    const person = (data.rows)[0];
     if (person) {
       return person
     } else {

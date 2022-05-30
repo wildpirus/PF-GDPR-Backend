@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer');
 
 const pool = require('../libs/postgresPool');
 const { config } = require('../config/config');
-const format = require('../utils/formatResponse');
+//const format = require('../utils/formatResponse');
 
 class UsersService {
 

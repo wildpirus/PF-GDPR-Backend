@@ -6,7 +6,7 @@ const { config } = require('../config/config');
 
 const UsersService = require('../services/usersService');
 const PersonsService = require('../services/personsService');
-const format = require('../utils/formatResponse');
+//const format = require('../utils/formatResponse');
 
 const usersService = new UsersService();
 const personsService = new PersonsService();
@@ -70,7 +70,7 @@ class EmployeesService {
     delete result.rows[0].user_id;
     delete result.rows[0].attendant_id;
     delete result.rows[0].employee_id;
-    const data = format(result.rows)[0];
+    const data = (result.rows)[0];
     if (data){
       return data;
     } else {
@@ -95,7 +95,7 @@ class EmployeesService {
       "where care.employee_id = '"+employee_id+"';"
     );
     const result = await this.pool.query(query);
-    const data = format(result.rows);
+    const data = (result.rows);
     if (data){
       return data;
     } else {
@@ -189,7 +189,7 @@ class EmployeesService {
       "where employees.role_name = 'MED';"
     );
     const result = await this.pool.query(query);
-    const data = format(result.rows);
+    const data = (result.rows);
     return data;
   }
 

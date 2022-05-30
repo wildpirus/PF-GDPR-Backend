@@ -1,7 +1,7 @@
 const boom = require('@hapi/boom');
 
 const pool = require('../libs/postgresPool');
-const format = require('../utils/formatResponse');
+//const format = require('../utils/formatResponse');
 
 class CareService {
 
@@ -70,7 +70,7 @@ class CareService {
       "where careid = '"+careid+"' limit 1;"
     );
     const result = await this.pool.query(query);
-    const data = format(result.rows)[0];
+    const data = (result.rows)[0];
     if(data){
       return data;
     }else {

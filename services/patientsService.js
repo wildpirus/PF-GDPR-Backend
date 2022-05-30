@@ -169,7 +169,7 @@ class PatientsService {
       "where care.patient_id = '"+patient_id+"';"
     );
     const result = await this.pool.query(query);
-    const data = format(result.rows);
+    const data = (result.rows);
     if (data){
       return data;
     } else {
