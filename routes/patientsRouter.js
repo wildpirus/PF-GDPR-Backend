@@ -104,13 +104,13 @@ router.patch('/update-consents',
 );
 
 // get patient history for med
-router.get('/patient-history',
+router.get('/patient-history/:patient_id',
   passport.authenticate('jwt', {session: false}),
   checkRoles('MED'),
-  validatorHandler(getPatientSchema, 'body'),
+  validatorHandler(getPatientSchema, 'params'),
   async (req,res, next) => {
     try {
-      const { patient_id } = req.body;
+      const { patient_id } = req.params;
       const patient = await service.getPatientHistory(patient_id);
       res.status(201).json(patient);
     } catch (error) {
