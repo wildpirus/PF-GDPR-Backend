@@ -3,7 +3,6 @@ const passport = require('passport');
 
 const UsersService = require('../services/usersService');
 const validatorHandler = require('../middlewares/validatorHandler');
-const { checkRoles } = require('../middlewares/authHandler');
 const {
   loginUserSchema,
   recoverySchema,

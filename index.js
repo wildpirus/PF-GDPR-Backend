@@ -41,5 +41,5 @@ app.use(boomErrorHandler);
 app.use(errorHandler);
 
 app.listen(config.port, () => {
-  console.log("Deployed");
+  
 });

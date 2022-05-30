@@ -1,7 +1,5 @@
 const boom = require('@hapi/boom');
 
-const { config } = require('./../config/config');
-
 function checkAdminRole(req, res, next) {
   const user = req.user;
   if (user.role === 'admin') {
