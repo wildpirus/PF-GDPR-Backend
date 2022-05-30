@@ -15,7 +15,7 @@ const service = new CareService();
 
 router.post('/',
   passport.authenticate('jwt', {session: false}),
-  checkRoles('MED'),
+  checkRoles('MED','HUM'),
   validatorHandler(createCareSchema, 'body'),
   async (req,res, next) => {
     try {
