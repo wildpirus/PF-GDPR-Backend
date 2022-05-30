@@ -16,7 +16,6 @@ app.use(express.json());
 const whitelist = ['http://localhost:8080', config.feUrl];
 const options = {
   origin: (origin, callback) => {
-    console.log("origin: ",origin);
     if (whitelist.includes(origin) || !origin) {
       callback(null, true);
     } else {
@@ -41,5 +40,5 @@ app.use(boomErrorHandler);
 app.use(errorHandler);
 
 app.listen(config.port, () => {
-  
+
 });
