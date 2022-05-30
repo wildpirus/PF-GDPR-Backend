@@ -112,7 +112,7 @@ class UsersService {
       } else {
         delete data.rows[0].recovery_token;
         delete data.rows[0].password_;
-        return format(data.rows)[0];
+        return (data.rows)[0];
       }
     } else {
       throw boom.unauthorized('Role not allowed.');
