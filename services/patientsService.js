@@ -141,8 +141,7 @@ class PatientsService {
       "update patients \n"+
       "set \n"+
       "    height = '"+data.height+"', \n"+
-      "    weight = '"+data.weight+"', \n"+
-      "    rh = '"+data.rh+"' \n"+
+      "    weight = '"+data.weight+"' \n"+
       "where patient_id = '"+data.patient_id+"';"
     );
     const result = await this.pool.query(query);
