@@ -73,9 +73,9 @@ jobs:
         
     - name: Azure Login
       with: # Set Azure credentials secret as an input
-        credentials: ${{ secrets.AZURE_CREDENTIALS }}
-      env: # Or as an environment variable
-        credentials: ${{ secrets.AZURE_CREDENTIALS }}
+        credentials:   az ad sp create-for-rbac --name "gdprBackEnd" --role contributor \
+                            --scopes /subscriptions/a6dac0a9-f359-4817-88ad-c3b160109ec7/resourceGroups/gdpr_pf \
+                            --sdk-auth
 
     - name: 'gdprBackEnd'
       id: gdprBackEnd 
